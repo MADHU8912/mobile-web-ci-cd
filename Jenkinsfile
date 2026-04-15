@@ -4,12 +4,9 @@ pipeline {
     environment {
         DOCKER_IMAGE = "nikhilabba12/mobile-web"
         DOCKER_TAG = "latest"
-        DOCKER_CREDENTIALS_ID = "dockerhub-creds"
-        RENDER_DEPLOY_HOOK = credentials('render-hook')
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/MADHU8912/mobile-web-ci-cd.git'
@@ -60,17 +57,19 @@ pipeline {
 
         stage('Deploy to Render') {
             steps {
-                bat "curl -X POST %RENDER_DEPLOY_HOOK%"
+                withCredentials([string(credentialsId: 'render-hook', variable: 'RENDER_DEPLOY_HOOK')]) {
+                    powershell 'Invoke-WebRequest -Uri $env:RENDER_DEPLOY_HOOK -Method POST'
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build and Deployment Successful!'
+            echo 'Build and Deployment Successful!'
         }
         failure {
-            echo '❌ Build Failed!'
+            echo 'Build Failed!'
         }
     }
 }
